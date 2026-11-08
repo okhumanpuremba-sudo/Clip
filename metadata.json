@@ -1,0 +1,6 @@
+{
+  "name": "ClipForge AI",
+  "description": "Professional AI video clipping studio with Whop campaign rule validation, 9:16 reframing, and API usage diagnostics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

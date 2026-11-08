@@ -1,0 +1,213 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidVideoProject(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'title', 'sourceFileName', 'sourceUri',
+               'durationSec', 'width', 'height', 'transcriptText',
+               'campaignId', 'status', 'clipCount', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'title', 'sourceFileName', 'sourceUri',
+               'durationSec', 'width', 'height', 'transcriptText',
+               'campaignId', 'status', 'clipCount', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId == request.auth.uid && data.userId == userId &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.sourceFileName is string && data.sourceFileName.size() >= 1 && data.sourceFileName.size() <= 200 &&
+             data.sourceUri is string && data.sourceUri.size() <= 500 &&
+             data.durationSec is int && data.durationSec >= 1 && data.durationSec <= 36000 &&
+             data.width is int && data.width >= 0 && data.width <= 7680 &&
+             data.height is int && data.height >= 0 && data.height <= 7680 &&
+             data.transcriptText is string && data.transcriptText.size() <= 15000 &&
+             data.campaignId is string && data.campaignId.size() <= 128 &&
+             data.status is string && data.status in ['READY', 'ANALYZING', 'CLIPS_GENERATED', 'EXPORTED'] &&
+             data.clipCount is int && data.clipCount >= 0 && data.clipCount <= 200 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidWhopCampaign(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'name', 'brandName', 'payoutPer1kViews',
+               'targetPlatform', 'minDurationSec', 'maxDurationSec',
+               'logoPlacement', 'requiredLogoAsset', 'safeZoneTopPct',
+               'safeZoneBottomPct', 'requiredHashtags', 'mandatoryCaptionCta',
+               'seoGuidance', 'minConfidenceScore', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'name', 'brandName', 'payoutPer1kViews',
+               'targetPlatform', 'minDurationSec', 'maxDurationSec',
+               'logoPlacement', 'requiredLogoAsset', 'safeZoneTopPct',
+               'safeZoneBottomPct', 'requiredHashtags', 'mandatoryCaptionCta',
+               'seoGuidance', 'minConfidenceScore', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId == request.auth.uid && data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+             data.brandName is string && data.brandName.size() >= 1 && data.brandName.size() <= 100 &&
+             data.payoutPer1kViews is string && data.payoutPer1kViews.size() >= 1 && data.payoutPer1kViews.size() <= 40 &&
+             data.targetPlatform is string && data.targetPlatform in ['TIKTOK', 'REELS', 'SHORTS', 'ALL_VERTICAL'] &&
+             data.minDurationSec is int && data.minDurationSec >= 3 && data.minDurationSec <= 600 &&
+             data.maxDurationSec is int && data.maxDurationSec >= 5 && data.maxDurationSec <= 600 &&
+             data.maxDurationSec >= data.minDurationSec &&
+             data.logoPlacement is string && data.logoPlacement in ['TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_LEFT', 'BOTTOM_RIGHT', 'NONE'] &&
+             data.requiredLogoAsset is string && data.requiredLogoAsset.size() <= 150 &&
+             data.safeZoneTopPct is int && data.safeZoneTopPct >= 0 && data.safeZoneTopPct <= 40 &&
+             data.safeZoneBottomPct is int && data.safeZoneBottomPct >= 0 && data.safeZoneBottomPct <= 40 &&
+             data.requiredHashtags is string && data.requiredHashtags.size() <= 300 &&
+             data.mandatoryCaptionCta is string && data.mandatoryCaptionCta.size() <= 200 &&
+             data.seoGuidance is string && data.seoGuidance.size() <= 500 &&
+             data.minConfidenceScore is int && data.minConfidenceScore >= 0 && data.minConfidenceScore <= 100 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidClipCandidate(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'projectId', 'campaignId', 'title', 'category',
+               'reasonForSelection', 'confidenceScore', 'startSec', 'endSec',
+               'aspectRatio', 'reframeFocusX', 'subtitlesEnabled', 'subtitleText',
+               'captionText', 'hashtags', 'seoTitle', 'seoKeywords',
+               'logoPlacement', 'reviewStatus', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'projectId', 'campaignId', 'title', 'category',
+               'reasonForSelection', 'confidenceScore', 'startSec', 'endSec',
+               'aspectRatio', 'reframeFocusX', 'subtitlesEnabled', 'subtitleText',
+               'captionText', 'hashtags', 'seoTitle', 'seoKeywords',
+               'logoPlacement', 'reviewStatus', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId == request.auth.uid && data.userId == userId &&
+             data.projectId is string && isValidId(data.projectId) &&
+             data.campaignId is string && data.campaignId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 150 &&
+             data.category is string && data.category in [
+               'FUNNY_MOMENT', 'REACTION', 'GAMING_HIGHLIGHT',
+               'CLUTCH_PLAY', 'EXCITING_MOMENT', 'MEMORABLE_DIALOGUE'
+             ] &&
+             data.reasonForSelection is string && data.reasonForSelection.size() >= 1 && data.reasonForSelection.size() <= 600 &&
+             data.confidenceScore is int && data.confidenceScore >= 0 && data.confidenceScore <= 100 &&
+             data.startSec is int && data.startSec >= 0 && data.startSec <= 36000 &&
+             data.endSec is int && data.endSec >= 1 && data.endSec <= 36000 &&
+             data.endSec > data.startSec &&
+             data.aspectRatio is string && data.aspectRatio in ['9:16', '16:9', '1:1'] &&
+             data.reframeFocusX is int && data.reframeFocusX >= 0 && data.reframeFocusX <= 100 &&
+             data.subtitlesEnabled is bool &&
+             data.subtitleText is string && data.subtitleText.size() <= 1000 &&
+             data.captionText is string && data.captionText.size() <= 1000 &&
+             data.hashtags is string && data.hashtags.size() <= 400 &&
+             data.seoTitle is string && data.seoTitle.size() <= 200 &&
+             data.seoKeywords is string && data.seoKeywords.size() <= 300 &&
+             data.logoPlacement is string && data.logoPlacement in ['TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_LEFT', 'BOTTOM_RIGHT', 'NONE'] &&
+             data.reviewStatus is string && data.reviewStatus in ['PROPOSED', 'APPROVED', 'REJECTED', 'EXPORTED'] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidApiUsageLog(data, userId) {
+      return data.keys().hasAll([
+               'userId', 'providerId', 'modelName', 'operation',
+               'latencyMs', 'estimatedTokens', 'retryCount',
+               'success', 'errorMessage', 'createdAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'providerId', 'modelName', 'operation',
+               'latencyMs', 'estimatedTokens', 'retryCount',
+               'success', 'errorMessage', 'createdAt'
+             ]) &&
+             data.userId is string && data.userId == request.auth.uid && data.userId == userId &&
+             data.providerId is string && data.providerId.size() >= 1 && data.providerId.size() <= 80 &&
+             data.modelName is string && data.modelName.size() >= 1 && data.modelName.size() <= 80 &&
+             data.operation is string && data.operation.size() >= 1 && data.operation.size() <= 100 &&
+             data.latencyMs is int && data.latencyMs >= 0 && data.latencyMs <= 300000 &&
+             data.estimatedTokens is int && data.estimatedTokens >= 0 && data.estimatedTokens <= 1000000 &&
+             data.retryCount is int && data.retryCount >= 0 && data.retryCount <= 10 &&
+             data.success is bool &&
+             data.errorMessage is string && data.errorMessage.size() <= 500 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId}/projects/{projectId} {
+      allow get: if isOwner(userId) && isValidId(projectId) && existing().userId == request.auth.uid;
+      allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+      allow create: if isOwner(userId) && isValidId(projectId) && isValidVideoProject(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(projectId) && isValidVideoProject(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'title', 'sourceFileName', 'sourceUri', 'durationSec',
+                         'width', 'height', 'transcriptText', 'campaignId',
+                         'status', 'clipCount', 'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(projectId) && existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/campaigns/{campaignId} {
+      allow get: if isOwner(userId) && isValidId(campaignId) && existing().userId == request.auth.uid;
+      allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+      allow create: if isOwner(userId) && isValidId(campaignId) && isValidWhopCampaign(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(campaignId) && isValidWhopCampaign(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'name', 'brandName', 'payoutPer1kViews', 'targetPlatform',
+                         'minDurationSec', 'maxDurationSec', 'logoPlacement',
+                         'requiredLogoAsset', 'safeZoneTopPct', 'safeZoneBottomPct',
+                         'requiredHashtags', 'mandatoryCaptionCta', 'seoGuidance',
+                         'minConfidenceScore', 'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(campaignId) && existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/clips/{clipId} {
+      allow get: if isOwner(userId) && isValidId(clipId) && existing().userId == request.auth.uid;
+      allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+      allow create: if isOwner(userId) && isValidId(clipId) && isValidClipCandidate(incoming(), userId);
+      allow update: if isOwner(userId) && isValidId(clipId) && isValidClipCandidate(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().projectId == existing().projectId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'campaignId', 'title', 'category', 'reasonForSelection',
+                         'confidenceScore', 'startSec', 'endSec', 'aspectRatio',
+                         'reframeFocusX', 'subtitlesEnabled', 'subtitleText',
+                         'captionText', 'hashtags', 'seoTitle', 'seoKeywords',
+                         'logoPlacement', 'reviewStatus', 'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(clipId) && existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/api_logs/{logId} {
+      allow get: if isOwner(userId) && isValidId(logId) && existing().userId == request.auth.uid;
+      allow list: if isOwner(userId) && existing().userId == request.auth.uid;
+      allow create: if isOwner(userId) && isValidId(logId) && isValidApiUsageLog(incoming(), userId);
+      allow update: if false;
+      allow delete: if isOwner(userId) && isValidId(logId) && existing().userId == request.auth.uid;
+    }
+  }
+}

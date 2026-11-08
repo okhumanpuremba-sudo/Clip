@@ -1,0 +1,215 @@
+{
+  "entities": {
+    "VideoProject": {
+      "title": "VideoProject",
+      "description": "A user-uploaded or configured source video project in ClipForge AI.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "title": { "type": "string", "description": "Project title (1-120 chars)." },
+        "sourceFileName": { "type": "string", "description": "Original video file name." },
+        "sourceUri": { "type": "string", "description": "Local URI or reference identifier." },
+        "durationSec": { "type": "integer", "description": "Total video duration in seconds." },
+        "width": { "type": "integer", "description": "Source video width in pixels." },
+        "height": { "type": "integer", "description": "Source video height in pixels." },
+        "transcriptText": { "type": "string", "description": "Timecoded transcript or scene context notes." },
+        "campaignId": { "type": "string", "description": "Optional associated Whop campaign ID." },
+        "status": {
+          "type": "string",
+          "enum": ["READY", "ANALYZING", "CLIPS_GENERATED", "EXPORTED"],
+          "description": "Lifecycle status of the project."
+        },
+        "clipCount": { "type": "integer", "description": "Number of generated clips." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": [
+        "userId",
+        "title",
+        "sourceFileName",
+        "sourceUri",
+        "durationSec",
+        "width",
+        "height",
+        "transcriptText",
+        "campaignId",
+        "status",
+        "clipCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WhopCampaign": {
+      "title": "WhopCampaign",
+      "description": "Whop Campaign Mode ruleset and required branding/framing/SEO specifications.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "name": { "type": "string", "description": "Campaign title." },
+        "brandName": { "type": "string", "description": "Creator or sponsor brand name." },
+        "payoutPer1kViews": { "type": "string", "description": "RPM / payout rate description." },
+        "targetPlatform": {
+          "type": "string",
+          "enum": ["TIKTOK", "REELS", "SHORTS", "ALL_VERTICAL"],
+          "description": "Target short-form platform."
+        },
+        "minDurationSec": { "type": "integer", "description": "Minimum allowed clip length in seconds." },
+        "maxDurationSec": { "type": "integer", "description": "Maximum allowed clip length in seconds." },
+        "logoPlacement": {
+          "type": "string",
+          "enum": ["TOP_LEFT", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_RIGHT", "NONE"],
+          "description": "Required watermark logo zone."
+        },
+        "requiredLogoAsset": { "type": "string", "description": "Required asset filename or badge label." },
+        "safeZoneTopPct": { "type": "integer", "description": "Top safe zone margin percentage (0-40)." },
+        "safeZoneBottomPct": { "type": "integer", "description": "Bottom safe zone margin percentage (0-40)." },
+        "requiredHashtags": { "type": "string", "description": "Space-separated mandatory hashtags." },
+        "mandatoryCaptionCta": { "type": "string", "description": "Required call-to-action text in caption." },
+        "seoGuidance": { "type": "string", "description": "SEO keyword and hook requirements." },
+        "minConfidenceScore": { "type": "integer", "description": "Minimum AI confidence score (0-100)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": [
+        "userId",
+        "name",
+        "brandName",
+        "payoutPer1kViews",
+        "targetPlatform",
+        "minDurationSec",
+        "maxDurationSec",
+        "logoPlacement",
+        "requiredLogoAsset",
+        "safeZoneTopPct",
+        "safeZoneBottomPct",
+        "requiredHashtags",
+        "mandatoryCaptionCta",
+        "seoGuidance",
+        "minConfidenceScore",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ClipCandidate": {
+      "title": "ClipCandidate",
+      "description": "An AI-detected timestamped highlight clip with 9:16 reframing, subtitles, and review state.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "projectId": { "type": "string", "description": "Parent VideoProject ID." },
+        "campaignId": { "type": "string", "description": "Optional WhopCampaign ID." },
+        "title": { "type": "string", "description": "Suggested clip hook title." },
+        "category": {
+          "type": "string",
+          "enum": [
+            "FUNNY_MOMENT",
+            "REACTION",
+            "GAMING_HIGHLIGHT",
+            "CLUTCH_PLAY",
+            "EXCITING_MOMENT",
+            "MEMORABLE_DIALOGUE"
+          ],
+          "description": "AI highlight detection category."
+        },
+        "reasonForSelection": { "type": "string", "description": "Why the AI pipeline selected this moment." },
+        "confidenceScore": { "type": "integer", "description": "AI confidence score (0-100)." },
+        "startSec": { "type": "integer", "description": "Clip start timestamp in seconds." },
+        "endSec": { "type": "integer", "description": "Clip end timestamp in seconds." },
+        "aspectRatio": {
+          "type": "string",
+          "enum": ["9:16", "16:9", "1:1"],
+          "description": "Target aspect ratio."
+        },
+        "reframeFocusX": { "type": "integer", "description": "Horizontal subject focal center (0-100%)." },
+        "subtitlesEnabled": { "type": "boolean", "description": "Whether dynamic captions are burned/rendered." },
+        "subtitleText": { "type": "string", "description": "Synchronized subtitle script." },
+        "captionText": { "type": "string", "description": "Social post caption text." },
+        "hashtags": { "type": "string", "description": "Space-separated hashtags." },
+        "seoTitle": { "type": "string", "description": "Search-optimized title." },
+        "seoKeywords": { "type": "string", "description": "Comma-separated SEO keywords." },
+        "logoPlacement": {
+          "type": "string",
+          "enum": ["TOP_LEFT", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_RIGHT", "NONE"],
+          "description": "Configured logo watermark position."
+        },
+        "reviewStatus": {
+          "type": "string",
+          "enum": ["PROPOSED", "APPROVED", "REJECTED", "EXPORTED"],
+          "description": "Editorial review status."
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update." }
+      },
+      "required": [
+        "userId",
+        "projectId",
+        "campaignId",
+        "title",
+        "category",
+        "reasonForSelection",
+        "confidenceScore",
+        "startSec",
+        "endSec",
+        "aspectRatio",
+        "reframeFocusX",
+        "subtitlesEnabled",
+        "subtitleText",
+        "captionText",
+        "hashtags",
+        "seoTitle",
+        "seoKeywords",
+        "logoPlacement",
+        "reviewStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ApiUsageLog": {
+      "title": "ApiUsageLog",
+      "description": "Immutable telemetry entry for AI pipeline and provider connectivity calls.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "providerId": { "type": "string", "description": "Provider identifier." },
+        "modelName": { "type": "string", "description": "Model name used." },
+        "operation": { "type": "string", "description": "Operation label." },
+        "latencyMs": { "type": "integer", "description": "Measured round-trip latency in ms." },
+        "estimatedTokens": { "type": "integer", "description": "Estimated token count." },
+        "retryCount": { "type": "integer", "description": "Number of retry attempts executed." },
+        "success": { "type": "boolean", "description": "Whether the call succeeded." },
+        "errorMessage": { "type": "string", "description": "Error detail if failed." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation." }
+      },
+      "required": [
+        "userId",
+        "providerId",
+        "modelName",
+        "operation",
+        "latencyMs",
+        "estimatedTokens",
+        "retryCount",
+        "success",
+        "errorMessage",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/VideoProject" },
+      "description": "User-owned video clipping projects."
+    },
+    "/users/{userId}/campaigns/{campaignId}": {
+      "schema": { "$ref": "#/entities/WhopCampaign" },
+      "description": "User-owned Whop campaign rule templates."
+    },
+    "/users/{userId}/clips/{clipId}": {
+      "schema": { "$ref": "#/entities/ClipCandidate" },
+      "description": "User-owned AI highlight clips for review and export."
+    },
+    "/users/{userId}/api_logs/{logId}": {
+      "schema": { "$ref": "#/entities/ApiUsageLog" },
+      "description": "Append-only API usage and retry telemetry logs."
+    }
+  }
+}

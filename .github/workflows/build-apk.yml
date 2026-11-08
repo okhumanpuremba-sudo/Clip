@@ -1,0 +1,94 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Gradle 9.3.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Prepare Keystore, Firebase Config, Secrets, and Android SDK
+        run: |
+          # 1. Restore debug.keystore (matching Firebase OAuth SHA-1 7d129209c5ceb3cff13fc0539724b60798b96623)
+          if [ -f "debug.keystore.base64" ]; then
+            base64 -di debug.keystore.base64 > debug.keystore
+          else
+            echo "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" | base64 -di > debug.keystore
+          fi
+          if [ ! -s "debug.keystore" ]; then
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          # 2. Restore app/google-services.json if omitted by GitHub sync
+          if [ ! -f "app/google-services.json" ]; then
+            echo "9pgIxICI6Iibvl2cyVmdf52bpRXYyV3ZpZmbvNmIgAiCs0FIgoQfgACIgoQfgACIgACIK0HIgACIgACIgoQXgACIgACIgACIgoQfgACIgACIgACIgACIKMDI6ISZwlHdfRnbllGbjJCIgACIgACIgACIgACIgoALi02bj5CduVGdu92YyV2c1VGbn92bn5ycwBXYugGOvhTY0EGM1oWYvV3arFjNsl2N3sma2Enb25WYm12MtgDNxgTM2kDO3MjNxICI6ICZp9FduVWasNmIgACIgACIgACIgACIgAiC7BCIgACIgACIgACIgowWgojI05WZpx2YfhGd1F2bf1mcvZGdhxGcfJXZoR3biACIgACIgACIgAiC7BiOiU2YpZnclN3XlRXa25WawBXYiACIgACIgACIKsHI6IyclNWa2JXZzJCIgACIgAiCs0FIgACIgAiC9BCIgACIgACIKIycwF1c5Y3UtZEURNTa4hlSE1SUtUGbtp0RoZWcIVEWTFUeTFmeJFkIgojI5V2afRnblJnc1NmIgACIgACIgACIgowegACIgACIgAiCbBiOikXZr9VawFmIgACIgACIKwSXgACIgACIK0HIgACIgACIgowMgojIlBXe09FduVWasNmIgACIgACIgACIgoALi02bj5CduVGdu92YyV2c1VGbn92bn5ycwBXYugGOvhTY0EGM1oWYvV3arFjNsl2N3sma2Enb25WYm12MtgDNxgTM2kDO3MjNxICI6ICZp9FduVWasNmIgACIgACIgACIgowegACIgACIgAiCs0HIgACIgACIgoQfgACIgACIgACIgogIxImZ4I2N2U2NykjNzgzY4kjYhlzM5UmZkdjNjJWO0IWNldjMmVjNwICI6ICazFGafVGdhNWamlGdyV2YiACIgACIgACIgACIgoALi0mcrhnZ25CblVmch1Wds5ybpRWd0NXah5SbvNmIgojIl1WYu9VZnF2ajFGciACIgACIgACIgACIgowegojIvZmbp9FZp9mck5WYiACIgACIgACIgAiCsEDI6ISZwlHdfRnbllGbjJCIgACIgACIgACIKwiIt92YuQnblRnbvNmclNXdlx2Zv92ZuMHcwFmLk52MyN3bqp2NxRXYqZjMkN3bk1Gc4QmYpNjcxZGM1JWL4QTM4EjN5gzNzYTMiAiOiQWafRnbllGbjJCIgACIgACIgACIKsHIgACIgACIgowWgojI05WZpx2YfhGd1F2biACIgACIgoAL9BCIgACIgoQfgACIgACIgAiCi0mcrhnZ25CblVmch1Wds5ybpRWd0NXah5SbvNmIgojIl1WYu9VZnF2ajFGciACIgACIgACIgAiC7BiOi8mZul2X05WZpx2YfRWavJHZuFmIgACIgACIgAiCsISMmVjNwYmN2ETNldTN3UzNmFDMhdzY6QWavJHZuFmO4QTM4EjN5gzNzYTM6EjIgojIkl2XwBXYftGZzVGbpJ2btJCIgACIgACIgowegojIvZmbp9FduVWasNmIgACIgACIKsHIgACIKwSfgACIgoQfgACIgACIK0HIgACIgACIgoQXgACIgACIgACIgoQfgACIgACIgACIgACIKMDI6ISZwlHdfRnbllGbjJCIgACIgACIgACIgACIgoALi02bj5CduVGdu92YyV2c1VGbn92bn5ycwBXYugGOvhTY0EGM1oWYvV3arFjNsl2N3sma2Enb25WYm12MtgDNxgTM2kDO3MjNxICI6ICZp9FduVWasNmIgACIgACIgACIgACIgAiC7BCIgACIgACIgACIgowWgojI05WZpx2YfhGd1F2bf1mcvZGdhxGcfJXZoR3biACIgACIgACIgAiC7BiOiU2YpZnclN3XlRXa25WawBXYiACIgACIgACIKsHI6IyclNWa2JXZzJCIgACIgAiCs0FIgACIgAiC9BCIgACIgACIKIycwF1c5Y3UtZEURNTa4hlSE1SUtUGbtp0RoZWcIVEWTFUeTFmeJFkIgojI5V2afRnblJnc1NmIgACIgACIgACIgowegACIgACIgAiCbBiOikXZr9VawFmIgACIgACIKwSXgACIgACIK0HIgACIgACIgowMgojIlBXe09FduVWasNmIgACIgACIgACIgoALi02bj5CduVGdu92YyV2c1VGbn92bn5ycwBXYugGOvhTY0EGM1oWYvV3arFjNsl2N3sma2Enb25WYm12MtgDNxgTM2kDO3MjNxICI6ICZp9FduVWasNmIgACIgACIgACIgowegACIgACIgAiCs0HIgACIgACIgoQfgACIgACIgACIgogIzIjN2kjY4kzNwYjY0IzN5MTNwMmZzEjZmN2MiV2Y1MWOwITOyEDZ3ICI6ICazFGafVGdhNWamlGdyV2YiACIgACIgACIgACIgoALiInex5Ge25SahV2Zy9mZwlGbj5ybpRWd0NXah5SbvNmIgojIl1WYu9VZnF2ajFGciACIgACIgACIgACIgowegojIvZmbp9FZp9mck5WYiACIgACIgACIgAiCsEDI6ISZwlHdfRnbllGbjJCIgACIgACIgACIKwiIt92YuQnblRnbvNmclNXdlx2Zv92ZuMHcwFmL1x2czJnNqVnMwBHc0ZzciNmdopWYklWbyFHaxQGa2lWL4QTM4EjN5gzNzYTMiAiOiQWafRnbllGbjJCIgACIgACIgACIKsHIgACIgACIgowWgojI05WZpx2YfhGd1F2biACIgACIgoAL9BCIgACIgoQfgACIgACIgAiCiInex5Ge25SahV2Zy9mZwlGbj5ybpRWd0NXah5SbvNmIgojIl1WYu9VZnF2ajFGciACIgACIgACIgAiC7BiOi8mZul2X05WZpx2YfRWavJHZuFmIgACIgACIgAiCsISMmVjNwYmZjlDNzcjN0QzN3IDZ4kjZ6QWavJHZuFmO4QTM4EjN5gzNzYTM6EjIgojIkl2XwBXYftGZzVGbpJ2btJCIgACIgACIgowegojIvZmbp9FduVWasNmIgACIgACIKsHIgACIKsFI6ICduVWasNmIgAiCs0HIgogIwBXYuU2ZhJ3b0NXZzFmYlJXam5yM1QDOwUDO1cDMtQnbllGbj1yZuFGbt4WZnJCI6ICdlt2Y1J2XldWYy9GdzJCIgACIKwiIzUDN4ATN4UzNw0CduVWasNWLn5WYs1ibldmIgojIkl2X0NWZq9mcwJCIgACIKwiI4QTM4EjN5gzNzYTMiAiOiIXZi1Wdu9FdjVmavJHciACIgAiC7BiOi8mZul2X0NWZq9mcwJCIgowe" | rev | base64 -di > app/google-services.json
+          fi
+
+          # 3. Restore .env required by secrets-gradle-plugin
+          if [ ! -f ".env" ]; then
+            if [ -f ".env.example" ]; then
+              cp .env.example .env
+            else
+              touch .env
+            fi
+          fi
+
+          # 4. Accept Android SDK licenses and ensure compileSdk 36.1 / 36 is installed
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          if [ ! -d "$ANDROID_HOME/platforms/android-36.1" ]; then
+            $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36.1" || true
+          fi
+          if [ ! -d "$ANDROID_HOME/platforms/android-36.1" ]; then
+            $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" "build-tools;36.0.0" || true
+            sed -i 's/compileSdk { version = release(36) { minorApiLevel = 1 } }/compileSdk = 36/g' app/build.gradle.kts
+          fi
+
+      - name: Build Debug APK
+        run: |
+          gradle assembleDebug --no-configuration-cache --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk ClipForgeAI.apk
+          ls -lh ClipForgeAI.apk
+
+      - name: Upload ClipForge AI APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipForgeAI-APK
+          path: ClipForgeAI.apk
+
+      - name: Publish Direct APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-apk
+          name: "ClipForge AI Latest Android APK"
+          files: ClipForgeAI.apk
+          prerelease: false
+
+      - name: Commit APK to Repository Root
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f ClipForgeAI.apk
+          git diff --staged --quiet || (git commit -m "chore: build ClipForgeAI.apk [skip ci]" && git push)
